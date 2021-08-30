@@ -109,7 +109,7 @@
     - ansible_distribution_major_version >= '8'
 
 - name: "Disable SpaceWalk-Client Repository (CentOS 8)"
-  command: dnf config-manager --set-disabled spaceWalk-client
+  command: dnf config-manager --set-disabled spacewalk-client
   args:
     warn: no
   notify: yum-clean-metadata
