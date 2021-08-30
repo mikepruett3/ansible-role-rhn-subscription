@@ -23,7 +23,7 @@
   when:
     - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
     - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version <= '7'
+    #- ansible_distribution_major_version <= '7'
 
 - name: "Uninstall EPEL Repository package (CentOS)"
   ansible.builtin.package:
