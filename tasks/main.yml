@@ -121,9 +121,9 @@
 - name: "Register with Spacewalk Server (CentOS)"
   community.general.rhn_register:
     state: present
-    activationkey: "{{ activation_key }}"
-    server_url: "https://{{ spacewalk_server }}/XMLRPC"
-    sslcacert: "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"
+    activationkey: '{{ activation_key }}'
+    server_url: 'https://{{ spacewalk_server }}/XMLRPC'
+    sslcacert: '/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT'
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
