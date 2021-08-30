@@ -21,13 +21,13 @@
   shell: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
   register: subscription_status
   changed_when: false
-  when: ansible_distribution == 'RedHat'
+  #when: ansible_distribution == 'RedHat'
 
 - name: "Check Subscription Status (CentOS)"
   shell: spacewalk-channel --list
   register: spacewalk_status
   changed_when: false
-  when: ansible_distribution == 'CentOS'
+  #when: ansible_distribution == 'CentOS'
 
 - name: "Check for Registration Credentials"
   ansible.builtin.fail:
