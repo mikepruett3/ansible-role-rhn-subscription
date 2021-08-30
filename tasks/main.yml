@@ -1,5 +1,17 @@
 ---
 # tasks file for ansible-role-rhn-subscription/
+- name: Include OS-specific variables.
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_os_family }}_{{ ansible_distribution_major_version }}.yaml"
+        - "{{ ansible_distribution }}.yaml"
+        - "{{ ansible_os_family }}.yaml"
+        - default.yaml
+      paths:
+        - "vars"
+
 - name: "Gather the package facts"
   ansible.builtin.package_facts:
     manager: auto
@@ -38,85 +50,22 @@
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
 
-- name: "Disable Base Repository (CentOS 7)"
-  command: yum-config-manager --disable base
+- name: "Disable Existing Repositories (CentOS)"
+  command: "{{config-manager}} {{ item }}"
   args:
     warn: no
   notify: yum-clean-metadata
+  with_items:
+    - base
+    - baseos
+    - extras
+    - appstream
+    - updates
+    - spacewalk-client
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version <= '7'
-
-- name: "Disable Extras Repository (CentOS 7)"
-  command: yum-config-manager --disable extras
-  args:
-    warn: no
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version <= '7'
-
-- name: "Disable Updates Repository (CentOS 7)"
-  command: yum-config-manager --disable updates
-  args:
-    warn: no
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version <= '7'
-
-- name: "Disable SpaceWalk-Client Repository (CentOS 7)"
-  command: yum-config-manager --disable spacewalk-client
-  args:
-    warn: no
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version <= '7'
-
-- name: "Disable Base Repository (CentOS 8)"
-  command: dnf config-manager --set-disabled baseos
-  args:
-    warn: no
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version >= '8'
-
-- name: "Disable Extras Repository (CentOS 8)"
-  command: dnf config-manager --set-disabled extras
-  args:
-    warn: no
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version >= '8'
-
-- name: "Disable AppStream Repository (CentOS 8)"
-  command: dnf config-manager --set-disabled appstream
-  args:
-    warn: no
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version >= '8'
-
-- name: "Disable SpaceWalk-Client Repository (CentOS 8)"
-  command: dnf config-manager --set-disabled spacewalk-client
-  args:
-    warn: no
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version >= '8'
+    #- ansible_distribution_major_version <= '7'
 
 - name: "Register with Spacewalk Server (CentOS)"
   community.general.rhn_register:
