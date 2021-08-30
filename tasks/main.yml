@@ -133,3 +133,26 @@
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
+
+- name: "Import CentOS Repository Signing Key (CentOS)"
+  block:
+    - name: "Download CentOS Repository Signing Key"
+      ansible.builtin.get_url:
+        url: "{{ centos_key }}"
+        dest: /tmp/
+      delegate_to: localhost
+    - name: "Transfer CentOS Repository Signing Key to host"
+      ansible.builtin.copy:
+        src: "{{ centos_key }}"
+        dest: /tmp/
+        owner: root
+        group: root
+        mode: 0644
+        remote_src: no
+    - name: "Import CentOS Repository Signing Key"
+      rpm_key:
+        key: "{{ centos_key }}"
+        state: present
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'

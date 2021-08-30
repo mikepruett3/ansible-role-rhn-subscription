@@ -1,3 +1,4 @@
 ---
 # vars file for ansible-role-rhn-subscription/
 config_manager: "yum-config-manager --disable "
+centos_key: "https://centos.org/keys/RPM-GPG-KEY-CentOS-{{ ansible_distribution_major_version }}"

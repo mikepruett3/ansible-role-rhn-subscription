@@ -1,3 +1,4 @@
 ---
 # vars file for ansible-role-rhn-subscription/
 config_manager: "dnf config-manager --set-disabled "
+centos_key: "https://centos.org/keys/RPM-GPG-KEY-CentOS-Official"
