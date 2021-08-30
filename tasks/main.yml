@@ -33,6 +33,33 @@
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
 
+- name: "Disable Base Repository (CentOS 7)"
+  ansible.builtin.yum_repository:
+    name: "Base"
+    state: absent
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+
+- name: "Disable Extras Repository (CentOS 7)"
+  ansible.builtin.yum_repository:
+    name: "Extras"
+    state: absent
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+
+- name: "Disable Updates Repository (CentOS 7)"
+  ansible.builtin.yum_repository:
+    name: "Updates"
+    state: absent
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+
 - name: "Disable all existing Repositories (CentOS 7)"
   ansible.builtin.yum_repository:
     name: "*"
