@@ -25,6 +25,14 @@
     - ansible_distribution == 'CentOS'
     - ansible_distribution_major_version <= '7'
 
+- name: "Uninstall EPEL repository package (CentOS)"
+  ansible.builtin.package:
+    name: "epel-release"
+    state: absent
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+
 - name: "Disable all existing Repositories (CentOS 7)"
   ansible.builtin.yum_repository:
     name: "*"
@@ -34,15 +42,6 @@
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
     - ansible_distribution_major_version <= '7'
-
-- name: "Disable EPEL repository (CentOS)"
-  ansible.builtin.yum_repository:
-    name: "epel{{ ansible_distribution_major_version }}_{{ ansible_architecture }}"
-    state: absent
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
 
 - name: "Disable all existing Repositories (CentOS 8)"
   ansible.builtin.dnf:
