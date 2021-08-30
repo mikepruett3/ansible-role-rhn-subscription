@@ -51,7 +51,7 @@
     - ansible_distribution == 'CentOS'
 
 - name: "Disable Existing Repositories (CentOS)"
-  command: "{{config-manager}} {{ item }}"
+  command: "{{ config_manager }} {{ item }}"
   args:
     warn: no
   notify: yum-clean-metadata
