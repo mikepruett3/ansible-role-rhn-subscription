@@ -131,7 +131,7 @@
         key: '/tmp/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
         state: present
         validate_certs: no
-  notify: yum-clean-metadata
+      notify: yum-clean-metadata
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
@@ -156,7 +156,7 @@
         key: "/tmp/{{ centos_key }}"
         state: present
         validate_certs: no
-  notify: yum-clean-metadata
+      notify: yum-clean-metadata
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
