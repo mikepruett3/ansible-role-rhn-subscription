@@ -78,35 +78,45 @@
     - ansible_distribution == 'CentOS'
     - ansible_distribution_major_version <= '7'
 
-- name: "Disable all existing Repositories (CentOS 8)"
-  community.general.rhsm_repository:
-    name: "*"
-    state: disabled
-    purge: True
+- name: "Disable Base Repository (CentOS 8)"
+  command: dnf config-manager --set-disabled baseos
+  args:
+    warn: no
   notify: yum-clean-metadata
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
     - ansible_distribution_major_version >= '8'
 
-#- name: "Disable all existing Repositories (CentOS 7)"
-#  ansible.builtin.yum_repository:
-#    name: "*"
-#    state: absent
-#  notify: yum-clean-metadata
-#  when:
-#    - subscription_status.stdout != "Subscribed"
-#    - ansible_distribution == 'CentOS'
-#    - ansible_distribution_major_version <= '7'
+- name: "Disable Extras Repository (CentOS 8)"
+  command: dnf config-manager --set-disabled extras
+  args:
+    warn: no
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version >= '8'
 
-#- name: "Disable all existing Repositories (CentOS 8)"
-#  ansible.builtin.dnf:
-#    disablerepo: "*"
-#  notify: yum-clean-metadata
-#  when:
-#    - subscription_status.stdout != "Subscribed"
-#    - ansible_distribution == 'CentOS'
-#    - ansible_distribution_major_version >= '8'
+- name: "Disable AppStream Repository (CentOS 8)"
+  command: dnf config-manager --set-disabled appstream
+  args:
+    warn: no
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version >= '8'
+
+- name: "Disable SpaceWalk-Client Repository (CentOS 8)"
+  command: dnf config-manager --set-disabled spaceWalk-client
+  args:
+    warn: no
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version >= '8'
 
 - name: "Register with Spacewalk Server (CentOS)"
   community.general.rhn_register:
