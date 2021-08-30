@@ -37,7 +37,7 @@
 
 - name: "Disable EPEL repository (CentOS 7)"
   ansible.builtin.yum_repository:
-    name: "epel"
+    name: epel7
     state: absent
   notify: yum-clean-metadata
   when:
