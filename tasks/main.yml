@@ -26,6 +26,7 @@
 - name: "Check Subscription Status (CentOS)"
   shell: spacewalk-channel --list
   register: spacewalk_status
+  ignore_errors: true
   changed_when: false
   #when: ansible_distribution == 'CentOS'
 
