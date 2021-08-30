@@ -138,12 +138,12 @@
   block:
     - name: "Download CentOS Repository Signing Key"
       ansible.builtin.get_url:
-        url: "{{ centos_key }}"
+        url: "https://centos.org/keys/{{ centos_key }}"
         dest: /tmp/
       delegate_to: localhost
     - name: "Transfer CentOS Repository Signing Key to host"
       ansible.builtin.copy:
-        src: "{{ centos_key }}"
+        src: "/tmp/{{ centos_key }}"
         dest: /tmp/
         owner: root
         group: root
@@ -151,7 +151,7 @@
         remote_src: no
     - name: "Import CentOS Repository Signing Key"
       rpm_key:
-        key: "{{ centos_key }}"
+        key: "/tmp/{{ centos_key }}"
         state: present
   when:
     - subscription_status.stdout != "Subscribed"
