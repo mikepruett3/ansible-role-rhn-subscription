@@ -54,6 +54,7 @@
   command: "{{ config_manager }} {{ item }}"
   args:
     warn: no
+  ignore_errors: True
   notify: yum-clean-metadata
   with_items:
     - base
@@ -82,7 +83,7 @@
     state: present
     username: "{{ username }}"
     password: "{{ password }}"
-    auto_attach: true
+    auto_attach: True
     syspurpose:
       usage: "Production"
       role: "Red Hat Enterprise Server"
