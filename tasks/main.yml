@@ -55,7 +55,7 @@
     activationkey: "{{ activation_key }}"
     server_hostname: "{{ spacewalk_server }}"
     rhsm_repo_ca_cert: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
-    server_insecure: true
+    server_insecure: "True"
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
