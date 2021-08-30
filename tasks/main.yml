@@ -21,6 +21,7 @@
     state: present
     validate_certs: no
     disablerepo: "*"
+    disable_gpg_check: no
   when:
     - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
     - ansible_distribution == 'CentOS'
