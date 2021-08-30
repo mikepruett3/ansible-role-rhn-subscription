@@ -20,6 +20,7 @@
     name: "{{ 'http://' + spacewalk_server + '/pub/rhn-org-trusted-ssl-cert-1.0-1.noarch.rpm' }}"
     state: present
     validate_certs: no
+    disablerepo: "*"
   when:
     - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
     - ansible_distribution == 'CentOS'
