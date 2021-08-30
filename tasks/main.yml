@@ -17,10 +17,17 @@
     manager: auto
   when: ansible_facts.packages is not defined
 
-- name: "Check Subscription Status"
+- name: "Check Subscription Status (RedHat)"
   shell: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
   register: subscription_status
   changed_when: false
+  when: ansible_distribution == 'RedHat'
+
+- name: "Check Subscription Status (CentOS)"
+  shell: spacewalk-channel --list
+  register: spacewalk_status
+  changed_when: false
+  when: ansible_distribution == 'CentOS'
 
 - name: "Check for Registration Credentials"
   ansible.builtin.fail:
@@ -36,8 +43,8 @@
     disable_gpg_check: yes
   when:
     - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
-    #- ansible_distribution_major_version <= '7'
 
 - name: "Uninstall EPEL Repository package (CentOS)"
   ansible.builtin.package:
@@ -47,7 +54,7 @@
     disablerepo: "*"
     disable_gpg_check: yes
   when:
-    - subscription_status.stdout != "Subscribed"
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
 
 - name: "Disable Existing Repositories (CentOS)"
@@ -64,7 +71,7 @@
     - updates
     - spacewalk-client
   when:
-    - subscription_status.stdout != "Subscribed"
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
     #- ansible_distribution_major_version <= '7'
 
@@ -75,7 +82,7 @@
     server_url: 'https://{{ spacewalk_server }}/XMLRPC'
     sslcacert: '/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT'
   when:
-    - subscription_status.stdout != "Subscribed"
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
 
 - name: "Register with Red Hat Subscription Manager (RHEL)"
@@ -98,7 +105,7 @@
     enabled: yes
     state: restarted
   when:
-    - subscription_status.stdout != "Subscribed"
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
 
 - name: "Enable & Start RHNS Timer Service (CentOS)"
@@ -108,7 +115,7 @@
     state: restarted
   ignore_errors: True
   when:
-    - subscription_status.stdout != "Subscribed"
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
 
 - name: "Import EPEL Repository Signing Key (CentOS)"
@@ -133,7 +140,7 @@
         validate_certs: no
       notify: yum-clean-metadata
   when:
-    - subscription_status.stdout != "Subscribed"
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
 
 - name: "Import CentOS Repository Signing Key (CentOS)"
@@ -158,5 +165,5 @@
         validate_certs: no
       notify: yum-clean-metadata
   when:
-    - subscription_status.stdout != "Subscribed"
+    - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
