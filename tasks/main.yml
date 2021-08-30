@@ -46,6 +46,7 @@
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version <= '7'
 
 - name: "Disable Extras Repository (CentOS 7)"
   command: yum-config-manager --disable extras
@@ -55,6 +56,7 @@
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version <= '7'
 
 - name: "Disable Updates Repository (CentOS 7)"
   command: yum-config-manager --disable updates
@@ -64,6 +66,7 @@
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version <= '7'
 
 #- name: "Disable all existing Repositories (CentOS 7)"
 #  ansible.builtin.yum_repository:
