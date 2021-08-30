@@ -127,9 +127,11 @@
         mode: 0644
         remote_src: no
     - name: "Import EPEL Repository Signing Key"
-      rpm_key:
+      ansible.builtin.rpm_key:
         key: '/tmp/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
         state: present
+        validate_certs: no
+  notify: yum-clean-metadata
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
@@ -150,9 +152,11 @@
         mode: 0644
         remote_src: no
     - name: "Import CentOS Repository Signing Key"
-      rpm_key:
+      ansible.builtin.rpm_key:
         key: "/tmp/{{ centos_key }}"
         state: present
+        validate_certs: no
+  notify: yum-clean-metadata
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
