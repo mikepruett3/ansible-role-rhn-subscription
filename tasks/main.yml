@@ -45,18 +45,11 @@
     - ansible_distribution_major_version >= '8'
 
 - name: "Register with Spacewalk Server (CentOS)"
-  #community.general.rhn_register:
-  #  state: present
-  #  activationkey: "{{ activation_key }}"
-  #  server_url: "https://{{ spacewalk_server }}/XMLRPC"
-  #  sslcacert: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
-  community.general.redhat_subscription:
+  community.general.rhn_register:
     state: present
     activationkey: "{{ activation_key }}"
-    org_id: "{{ org_id }}"
-    server_hostname: "{{ spacewalk_server }}"
-    rhsm_repo_ca_cert: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
-    server_insecure: "True"
+    server_url: "https://{{ spacewalk_server }}/XMLRPC"
+    sslcacert: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
