@@ -68,6 +68,26 @@
     - ansible_distribution == 'CentOS'
     - ansible_distribution_major_version <= '7'
 
+- name: "Disable SpaceWalk-Client Repository (CentOS 7)"
+  command: yum-config-manager --disable spacewalk-client
+  args:
+    warn: no
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version <= '7'
+
+- name: "Disable all existing Repositories (CentOS 8)"
+  community.general.rhsm_repository:
+    name: "*"
+    state: disabled
+  notify: yum-clean-metadata
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version >= '8'
+
 #- name: "Disable all existing Repositories (CentOS 7)"
 #  ansible.builtin.yum_repository:
 #    name: "*"
@@ -78,21 +98,21 @@
 #    - ansible_distribution == 'CentOS'
 #    - ansible_distribution_major_version <= '7'
 
-- name: "Disable all existing Repositories (CentOS 8)"
-  ansible.builtin.dnf:
-    disablerepo: "*"
-  notify: yum-clean-metadata
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version >= '8'
+#- name: "Disable all existing Repositories (CentOS 8)"
+#  ansible.builtin.dnf:
+#    disablerepo: "*"
+#  notify: yum-clean-metadata
+#  when:
+#    - subscription_status.stdout != "Subscribed"
+#    - ansible_distribution == 'CentOS'
+#    - ansible_distribution_major_version >= '8'
 
 - name: "Register with Spacewalk Server (CentOS)"
   community.general.rhn_register:
     state: present
     activationkey: "{{ activation_key }}"
     server_url: "https://{{ spacewalk_server }}/XMLRPC"
-    sslcacert: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+    sslcacert: "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
