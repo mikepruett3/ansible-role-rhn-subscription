@@ -112,6 +112,15 @@
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
 
+- name: "Enable & Start RHNS Timer Service (CentOS)"
+  ansible.builtin.service:
+    name: "rhnsd.timer"
+    enabled: yes
+    state: restarted
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_distribution == 'CentOS'
+
 - name: "Import EPEL Repository Signing Key (CentOS)"
   block:
     - name: "Download EPEL Repository Signing Key"
