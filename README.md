@@ -26,6 +26,8 @@ spacewalk_server: "myserver.example.com"
 
 ```activation_key```  The activiation key to use with SpaceWalk Server
 
+```org_id```  The Organization ID to use with SpaceWalk Server (Normally "1")
+
 ```spacewalk_server```  The hostname of the SpaceWalk Server
 
 Role variables can be stored with the hosts.yaml file, or in the main variables file.
