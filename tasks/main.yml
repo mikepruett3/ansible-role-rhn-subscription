@@ -82,6 +82,7 @@
   community.general.rhsm_repository:
     name: "*"
     state: disabled
+    purge: True
   notify: yum-clean-metadata
   when:
     - subscription_status.stdout != "Subscribed"
