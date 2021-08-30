@@ -31,6 +31,9 @@
   ansible.builtin.package:
     name: "epel-release"
     state: absent
+    validate_certs: no
+    disablerepo: "*"
+    disable_gpg_check: yes
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_distribution == 'CentOS'
