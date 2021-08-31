@@ -63,13 +63,7 @@
   args:
     warn: no
   ignore_errors: True
-  with_items:
-    - base
-    - baseos
-    - extras
-    - appstream
-    - updates
-    - spacewalk-client
+  with_items: "{{ existing_repos }}"
   when:
     - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
