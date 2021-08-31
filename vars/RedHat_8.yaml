@@ -6,5 +6,5 @@ centos_key: "RPM-GPG-KEY-CentOS-Official"
 existing_repos:
   - baseos
   - appstream
-  - updates
+  - extras
   - spacewalk-client
