@@ -70,7 +70,7 @@
     #- ansible_distribution_major_version <= '7'
 
 - name: "Clean Repo Metadata, after disabling repos"
-  command: yum clean metadata
+  command: "{{ package_manager }} clean metadata"
   args:
     warn: no
   when:

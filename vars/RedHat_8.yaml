@@ -1,6 +1,7 @@
 ---
 # vars file for ansible-role-rhn-subscription/
 config_manager: "dnf config-manager --set-disabled "
+package_manager: "dnf"
 centos_key: "RPM-GPG-KEY-CentOS-Official"
 existing_repos:
   - baseos
