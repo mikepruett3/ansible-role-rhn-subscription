@@ -67,7 +67,6 @@
   when:
     - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
-    #- ansible_distribution_major_version <= '7'
 
 - name: "Clean Repo Metadata, after disabling repos"
   command: "{{ package_manager }} clean metadata"
@@ -120,6 +119,7 @@
   when:
     - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version <= '7'
 
 - name: "Import EPEL Repository Signing Key (CentOS)"
   block:
