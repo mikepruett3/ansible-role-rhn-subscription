@@ -76,6 +76,7 @@
   when:
     - spacewalk_status.rc != 0
     - ansible_distribution == 'CentOS'
+    - ansible_distribution_major_version >= '8'
 
 - name: "Register with Spacewalk Server (CentOS)"
   community.general.rhn_register:
