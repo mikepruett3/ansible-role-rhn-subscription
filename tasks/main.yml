@@ -21,14 +21,14 @@
   shell: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
   register: subscription_status
   changed_when: false
-  #when: ansible_distribution == 'RedHat'
+  when: ansible_facts['distribution'] == 'RedHat'
 
 - name: "Check Subscription Status (CentOS)"
   shell: spacewalk-channel --list
   register: spacewalk_status
   ignore_errors: true
   changed_when: false
-  #when: ansible_distribution == 'CentOS'
+  when: ansible_facts['distribution'] == 'CentOS'
 
 - name: "Check for Registration Credentials"
   ansible.builtin.fail:
@@ -45,7 +45,7 @@
   when:
     - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
 
 - name: "Uninstall EPEL Repository package (CentOS)"
   ansible.builtin.package:
@@ -56,7 +56,7 @@
     disable_gpg_check: yes
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
 
 - name: "Disable Existing Repositories (CentOS)"
   command: "{{ config_manager }} {{ item }}"
@@ -66,7 +66,7 @@
   with_items: "{{ existing_repos }}"
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
 
 - name: "Clean Repo Metadata, after disabling repos"
   command: "{{ package_manager }} clean metadata"
@@ -74,7 +74,7 @@
     warn: no
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
     - ansible_distribution_major_version >= '8'
 
 - name: "Register with Spacewalk Server (CentOS)"
@@ -85,9 +85,9 @@
     sslcacert: '/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT'
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
 
-- name: "Register with Red Hat Subscription Manager (RHEL)"
+- name: "Register with Red Hat Subscription Manager (RHEL8)"
   community.general.redhat_subscription:
     state: present
     username: "{{ username }}"
@@ -99,7 +99,23 @@
       service_level_agreement: "Standard"
   when:
     - subscription_status.stdout != "Subscribed"
-    - ansible_distribution == 'RedHat'
+    - ansible_facts['distribution'] == 'RedHat'
+    - ansible_distribution_major_version <= '8'
+
+- name: "Register with Red Hat Subscription Manager (RHEL9)"
+  community.general.redhat_subscription:
+    state: present
+    username: "{{ username }}"
+    password: "{{ password }}"
+    auto_attach: True
+    syspurpose:
+      usage: "Production"
+      role: "Red Hat Enterprise Linux Server"
+      service_level_agreement: "Standard"
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_facts['distribution'] == 'RedHat'
+    - ansible_distribution_major_version >= '9'
 
 - name: "Enable & Start RHNS Daemon Service (CentOS)"
   ansible.builtin.service:
@@ -108,7 +124,7 @@
     state: restarted
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
 
 - name: "Enable & Start RHNS Timer Service (CentOS)"
   ansible.builtin.service:
@@ -118,7 +134,7 @@
   ignore_errors: True
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
     - ansible_distribution_major_version <= '7'
 
 - name: "Import EPEL Repository Signing Key (CentOS)"
@@ -144,7 +160,7 @@
       notify: clean-metadata
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
 
 - name: "Import CentOS Repository Signing Key (CentOS)"
   block:
@@ -169,4 +185,4 @@
       notify: clean-metadata
   when:
     - spacewalk_status.rc != 0
-    - ansible_distribution == 'CentOS'
+    - ansible_facts['distribution'] == 'CentOS'
