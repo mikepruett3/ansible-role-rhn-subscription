@@ -17,6 +17,18 @@
     manager: auto
   when: ansible_facts.packages is not defined
 
+#- name: "Download RHN-ORG-TRUSTED-SSL-CERT from Spacewalk Server"
+#  ansible.builtin.get_url:
+#    url: "http://{{ spacewalk_server }}/pub/{{ item }}"
+#    dest: "/tmp"
+#    validate_certs: no
+#    mode: 0774
+#  with_items:
+#    - RHN-ORG-TRUSTED-SSL-CERT
+#    - RPM-GPG-KEY-spacewalk-2.9
+#    - RPM-GPG-KEY-spacewalk-nightly
+#    - RPM-GPG-KEY-spacewalk-java-packages
+
 - name: "Check Subscription Status (RedHat)"
   shell: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
   register: subscription_status
@@ -24,7 +36,7 @@
   when: ansible_facts['distribution'] == 'RedHat'
 
 - name: "Check Subscription Status (CentOS)"
-  shell: spacewalk-channel --list
+  ansible.builtin.shell: spacewalk-channel --list
   register: spacewalk_status
   ignore_errors: true
   changed_when: false
@@ -37,7 +49,7 @@
 
 - name: "Ensure credentials are installed for SpaceWalk server {{ spacewalk_server }}"
   ansible.builtin.package:
-    name: "{{ 'http://' + spacewalk_server + '/pub/rhn-org-trusted-ssl-cert-1.0-1.noarch.rpm' }}"
+    name: "http://{{ spacewalk_server }}/pub/rhn-org-trusted-ssl-cert-1.0-1.noarch.rpm"
     state: present
     validate_certs: no
     disablerepo: "*"
