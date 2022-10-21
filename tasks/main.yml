@@ -42,10 +42,10 @@
   changed_when: false
   when: ansible_facts['distribution'] == 'CentOS'
 
-- name: "Check for Registration Credentials"
-  ansible.builtin.fail:
-    msg: "Please provide Registration Credentials for this system!!"
-  when: ( (subscription_status.stdout != "Subscribed") or (spacewalk_status.rc != 0) ) and ( (activation_key is not defined) and ((username is not defined ) or (password is not defined)) )
+#- name: "Check for Registration Credentials"
+#  ansible.builtin.fail:
+#    msg: "Please provide Registration Credentials for this system!!"
+#  when: ( (subscription_status.stdout != "Subscribed") or (spacewalk_status.rc != 0) ) and ( (activation_key is not defined) and ((username is not defined ) or (password is not defined)) )
 
 - name: "Ensure credentials are installed for SpaceWalk server {{ spacewalk_server }}"
   ansible.builtin.package:
