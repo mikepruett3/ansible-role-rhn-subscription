@@ -112,7 +112,7 @@
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_facts['distribution'] == 'RedHat'
-    - ansible_distribution_major_version <= '8'
+    - ansible_facts['distribution_major_version'] <= '8'
 
 - name: "Register with Red Hat Subscription Manager (RHEL9)"
   community.general.redhat_subscription:
@@ -127,7 +127,7 @@
   when:
     - subscription_status.stdout != "Subscribed"
     - ansible_facts['distribution'] == 'RedHat'
-    - ansible_distribution_major_version >= '9'
+    - ansible_facts['distribution_major_version'] >= '9'
 
 - name: "Enable & Start RHNS Daemon Service (CentOS)"
   ansible.builtin.service:
@@ -147,7 +147,7 @@
   when:
     - spacewalk_status.rc != 0
     - ansible_facts['distribution'] == 'CentOS'
-    - ansible_distribution_major_version <= '7'
+    - ansible_facts['distribution_major_version'] <= '7'
 
 - name: "Import EPEL Repository Signing Key (CentOS)"
   block:
