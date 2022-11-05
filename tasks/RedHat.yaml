@@ -1,0 +1,35 @@
+---
+# RedHat tasks file for ansible-role-rhn-subscription/
+
+- name: "Check Subscription Status (RedHat)"
+  ansible.builtin.shell: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
+  register: subscription_status
+  changed_when: false
+
+- name: "Register with Red Hat Subscription Manager (RHEL8)"
+  community.general.redhat_subscription:
+    state: present
+    username: "{{ username }}"
+    password: "{{ password }}"
+    auto_attach: True
+    syspurpose:
+      usage: "Production"
+      role: "Red Hat Enterprise Server"
+      service_level_agreement: "Standard"
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_facts['distribution_major_version'] <= '8'
+
+- name: "Register with Red Hat Subscription Manager (RHEL9)"
+  community.general.redhat_subscription:
+    state: present
+    username: "{{ username }}"
+    password: "{{ password }}"
+    auto_attach: True
+    syspurpose:
+      usage: "Production"
+      role: "Red Hat Enterprise Linux Server"
+      service_level_agreement: "Standard"
+  when:
+    - subscription_status.stdout != "Subscribed"
+    - ansible_facts['distribution_major_version'] >= '9'

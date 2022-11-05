@@ -1,0 +1,128 @@
+---
+# CentOS tasks file for ansible-role-rhn-subscription/
+
+#- name: "Download RHN-ORG-TRUSTED-SSL-CERT from Spacewalk Server"
+#  ansible.builtin.get_url:
+#    url: "http://{{ spacewalk_server }}/pub/{{ item }}"
+#    dest: "/tmp"
+#    validate_certs: no
+#    mode: 0774
+#  with_items:
+#    - RHN-ORG-TRUSTED-SSL-CERT
+#    - RPM-GPG-KEY-spacewalk-2.9
+#    - RPM-GPG-KEY-spacewalk-nightly
+#    - RPM-GPG-KEY-spacewalk-java-packages
+
+- name: "Check Subscription Status (CentOS)"
+  ansible.builtin.shell: spacewalk-channel --list
+  ignore_errors: true
+  changed_when: false
+  register: spacewalk_status
+
+- name: "Ensure credentials are installed for SpaceWalk server"
+  ansible.builtin.yum:
+    name: "http://{{ spacewalk_server }}/pub/rhn-org-trusted-ssl-cert-1.0-1.noarch.rpm"
+    state: present
+    validate_certs: no
+    disablerepo: "*"
+    disable_gpg_check: yes
+  when:
+    - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
+    - spacewalk_status.rc != 0
+
+- name: "Uninstall EPEL Repository package (CentOS)"
+  ansible.builtin.yum:
+    name: "epel-release"
+    state: absent
+    validate_certs: no
+    disablerepo: "*"
+    disable_gpg_check: yes
+  when: spacewalk_status.rc != 0
+
+- name: "Disable Existing Repositories (CentOS)"
+  ansible.builtin.command: "{{ config_manager }} {{ item }}"
+  args:
+    warn: no
+  ignore_errors: True
+  with_items: "{{ existing_repos }}"
+  when: spacewalk_status.rc != 0
+
+- name: "Clean Repo Metadata, after disabling repos"
+  ansible.builtin.command: "{{ package_manager }} clean metadata"
+  args:
+    warn: no
+  when:
+    - spacewalk_status.rc != 0
+    - ansible_facts['distribution_major_version'] >= '8'
+
+- name: "Register with Spacewalk Server (CentOS)"
+  community.general.rhn_register:
+    state: present
+    activationkey: '{{ activation_key }}'
+    server_url: 'https://{{ spacewalk_server }}/XMLRPC'
+    sslcacert: '/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT'
+  when: spacewalk_status.rc != 0
+
+
+- name: "Enable & Start RHNS Daemon Service (CentOS)"
+  ansible.builtin.service:
+    name: "rhnsd"
+    enabled: yes
+    state: restarted
+  when: spacewalk_status.rc != 0
+
+- name: "Enable & Start RHNS Timer Service (CentOS)"
+  ansible.builtin.service:
+    name: "rhnsd.timer"
+    enabled: yes
+    state: restarted
+  ignore_errors: True
+  when:
+    - spacewalk_status.rc != 0
+    - ansible_facts['distribution_major_version'] <= '7'
+
+- name: "Import EPEL Repository Signing Key (CentOS)"
+  block:
+    - name: "Download EPEL Repository Signing Key"
+      ansible.builtin.get_url:
+        url: 'https://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
+        dest: /tmp/
+      delegate_to: localhost
+    - name: "Transfer EPEL Repository Signing Key to host"
+      ansible.builtin.copy:
+        src: '/tmp/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
+        dest: /tmp/
+        owner: root
+        group: root
+        mode: 0644
+        remote_src: no
+    - name: "Import EPEL Repository Signing Key"
+      ansible.builtin.rpm_key:
+        key: '/tmp/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
+        state: present
+        validate_certs: no
+      notify: clean-metadata
+  when: spacewalk_status.rc != 0
+
+- name: "Import CentOS Repository Signing Key (CentOS)"
+  block:
+    - name: "Download CentOS Repository Signing Key"
+      ansible.builtin.get_url:
+        url: "https://centos.org/keys/{{ centos_key }}"
+        dest: /tmp/
+      delegate_to: localhost
+    - name: "Transfer CentOS Repository Signing Key to host"
+      ansible.builtin.copy:
+        src: "/tmp/{{ centos_key }}"
+        dest: /tmp/
+        owner: root
+        group: root
+        mode: 0644
+        remote_src: no
+    - name: "Import CentOS Repository Signing Key"
+      ansible.builtin.rpm_key:
+        key: "/tmp/{{ centos_key }}"
+        state: present
+        validate_certs: no
+      notify: clean-metadata
+  when: spacewalk_status.rc != 0

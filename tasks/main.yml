@@ -1,200 +1,27 @@
 ---
 # tasks file for ansible-role-rhn-subscription/
-- name: Include OS-specific variables.
-  include_vars: "{{ lookup('first_found', params) }}"
+
+- name: "Include OS-specific variables"
+  ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
   vars:
     params:
       files:
-        - "{{ ansible_os_family }}_{{ ansible_distribution_major_version }}.yaml"
-        - "{{ ansible_distribution }}.yaml"
-        - "{{ ansible_os_family }}.yaml"
+        - '{{ansible_distribution}}_{{ansible_distribution_major_version}}.yaml'
+        - '{{ansible_distribution}}.yaml'
+        - '{{ansible_os_family}}.yaml'
         - default.yaml
       paths:
-        - "vars"
+        - 'vars'
 
 - name: "Gather the package facts"
   ansible.builtin.package_facts:
     manager: auto
   when: ansible_facts.packages is not defined
 
-#- name: "Download RHN-ORG-TRUSTED-SSL-CERT from Spacewalk Server"
-#  ansible.builtin.get_url:
-#    url: "http://{{ spacewalk_server }}/pub/{{ item }}"
-#    dest: "/tmp"
-#    validate_certs: no
-#    mode: 0774
-#  with_items:
-#    - RHN-ORG-TRUSTED-SSL-CERT
-#    - RPM-GPG-KEY-spacewalk-2.9
-#    - RPM-GPG-KEY-spacewalk-nightly
-#    - RPM-GPG-KEY-spacewalk-java-packages
-
-- name: "Check Subscription Status (RedHat)"
-  shell: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
-  register: subscription_status
-  changed_when: false
+- name: "Include tasks from RedHat playbook"
+  ansible.builtin.include_tasks: RedHat.yaml
   when: ansible_facts['distribution'] == 'RedHat'
 
-- name: "Check Subscription Status (CentOS)"
-  ansible.builtin.shell: spacewalk-channel --list
-  register: spacewalk_status
-  ignore_errors: true
-  changed_when: false
+- name: "Include tasks from CentOS playbook"
+  ansible.builtin.include_tasks: CentOS.yaml
   when: ansible_facts['distribution'] == 'CentOS'
-
-#- name: "Check for Registration Credentials"
-#  ansible.builtin.fail:
-#    msg: "Please provide Registration Credentials for this system!!"
-#  when: ( (subscription_status.stdout != "Subscribed") or (spacewalk_status.rc != 0) ) and ( (activation_key is not defined) and ((username is not defined ) or (password is not defined)) )
-
-- name: "Ensure credentials are installed for SpaceWalk server {{ spacewalk_server }}"
-  ansible.builtin.package:
-    name: "http://{{ spacewalk_server }}/pub/rhn-org-trusted-ssl-cert-1.0-1.noarch.rpm"
-    state: present
-    validate_certs: no
-    disablerepo: "*"
-    disable_gpg_check: yes
-  when:
-    - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-
-- name: "Uninstall EPEL Repository package (CentOS)"
-  ansible.builtin.package:
-    name: "epel-release"
-    state: absent
-    validate_certs: no
-    disablerepo: "*"
-    disable_gpg_check: yes
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-
-- name: "Disable Existing Repositories (CentOS)"
-  command: "{{ config_manager }} {{ item }}"
-  args:
-    warn: no
-  ignore_errors: True
-  with_items: "{{ existing_repos }}"
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-
-- name: "Clean Repo Metadata, after disabling repos"
-  command: "{{ package_manager }} clean metadata"
-  args:
-    warn: no
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-    - ansible_distribution_major_version >= '8'
-
-- name: "Register with Spacewalk Server (CentOS)"
-  community.general.rhn_register:
-    state: present
-    activationkey: '{{ activation_key }}'
-    server_url: 'https://{{ spacewalk_server }}/XMLRPC'
-    sslcacert: '/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT'
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-
-- name: "Register with Red Hat Subscription Manager (RHEL8)"
-  community.general.redhat_subscription:
-    state: present
-    username: "{{ username }}"
-    password: "{{ password }}"
-    auto_attach: True
-    syspurpose:
-      usage: "Production"
-      role: "Red Hat Enterprise Server"
-      service_level_agreement: "Standard"
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_facts['distribution'] == 'RedHat'
-    - ansible_facts['distribution_major_version'] <= '8'
-
-- name: "Register with Red Hat Subscription Manager (RHEL9)"
-  community.general.redhat_subscription:
-    state: present
-    username: "{{ username }}"
-    password: "{{ password }}"
-    auto_attach: True
-    syspurpose:
-      usage: "Production"
-      role: "Red Hat Enterprise Linux Server"
-      service_level_agreement: "Standard"
-  when:
-    - subscription_status.stdout != "Subscribed"
-    - ansible_facts['distribution'] == 'RedHat'
-    - ansible_facts['distribution_major_version'] >= '9'
-
-- name: "Enable & Start RHNS Daemon Service (CentOS)"
-  ansible.builtin.service:
-    name: "rhnsd"
-    enabled: yes
-    state: restarted
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-
-- name: "Enable & Start RHNS Timer Service (CentOS)"
-  ansible.builtin.service:
-    name: "rhnsd.timer"
-    enabled: yes
-    state: restarted
-  ignore_errors: True
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-    - ansible_facts['distribution_major_version'] <= '7'
-
-- name: "Import EPEL Repository Signing Key (CentOS)"
-  block:
-    - name: "Download EPEL Repository Signing Key"
-      ansible.builtin.get_url:
-        url: 'https://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
-        dest: /tmp/
-      delegate_to: localhost
-    - name: "Transfer EPEL Repository Signing Key to host"
-      ansible.builtin.copy:
-        src: '/tmp/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
-        dest: /tmp/
-        owner: root
-        group: root
-        mode: 0644
-        remote_src: no
-    - name: "Import EPEL Repository Signing Key"
-      ansible.builtin.rpm_key:
-        key: '/tmp/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}'
-        state: present
-        validate_certs: no
-      notify: clean-metadata
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
-
-- name: "Import CentOS Repository Signing Key (CentOS)"
-  block:
-    - name: "Download CentOS Repository Signing Key"
-      ansible.builtin.get_url:
-        url: "https://centos.org/keys/{{ centos_key }}"
-        dest: /tmp/
-      delegate_to: localhost
-    - name: "Transfer CentOS Repository Signing Key to host"
-      ansible.builtin.copy:
-        src: "/tmp/{{ centos_key }}"
-        dest: /tmp/
-        owner: root
-        group: root
-        mode: 0644
-        remote_src: no
-    - name: "Import CentOS Repository Signing Key"
-      ansible.builtin.rpm_key:
-        key: "/tmp/{{ centos_key }}"
-        state: present
-        validate_certs: no
-      notify: clean-metadata
-  when:
-    - spacewalk_status.rc != 0
-    - ansible_facts['distribution'] == 'CentOS'
