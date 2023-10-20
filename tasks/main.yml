@@ -16,12 +16,7 @@
 - name: "Gather the package facts"
   ansible.builtin.package_facts:
     manager: auto
-  when: ansible_facts.packages is not defined
+  when:
+    - ansible_facts['packages'] is not defined
 
-- name: "Include tasks from RedHat playbook"
-  ansible.builtin.include_tasks: RedHat.yaml
-  when: ansible_facts['distribution'] == 'RedHat'
-
-- name: "Include tasks from CentOS playbook"
-  ansible.builtin.include_tasks: CentOS.yaml
-  when: ansible_facts['distribution'] == 'CentOS'
+- ansible.builtin.include_tasks: "{{ ansible_facts['distribution'] }}.yaml"
