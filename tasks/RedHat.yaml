@@ -2,7 +2,8 @@
 # RedHat tasks file for ansible-role-rhn-subscription/
 
 - name: "Check Subscription Status (RedHat)"
-  ansible.builtin.shell: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
+  ansible.builtin.shell:
+    cmd: LANG=C subscription-manager list | awk  ' ( $1 == "Status:" ) { print $2 } ' | sort -u
   register: subscription_status
   changed_when: false
 

@@ -27,7 +27,6 @@
     disablerepo: "*"
     disable_gpg_check: yes
   when:
-    - '"rhn-org-trusted-ssl-cert-1.0-1.noarch" not in ansible_facts.packages'
     - spacewalk_status.rc != 0
 
 - name: "Uninstall EPEL Repository package (CentOS)"
@@ -37,7 +36,8 @@
     validate_certs: no
     disablerepo: "*"
     disable_gpg_check: yes
-  when: spacewalk_status.rc != 0
+  when:
+    - spacewalk_status.rc != 0
 
 - name: "Disable Existing Repositories (CentOS)"
   ansible.builtin.command: "{{ config_manager }} {{ item }}"
@@ -45,7 +45,8 @@
     warn: no
   ignore_errors: True
   with_items: "{{ existing_repos }}"
-  when: spacewalk_status.rc != 0
+  when:
+    - spacewalk_status.rc != 0
 
 - name: "Clean Repo Metadata, after disabling repos"
   ansible.builtin.command: "{{ package_manager }} clean metadata"
@@ -61,7 +62,8 @@
     activationkey: '{{ activation_key }}'
     server_url: 'https://{{ spacewalk_server }}/XMLRPC'
     sslcacert: '/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT'
-  when: spacewalk_status.rc != 0
+  when:
+    - spacewalk_status.rc != 0
 
 
 - name: "Enable & Start RHNS Daemon Service (CentOS)"
@@ -69,7 +71,8 @@
     name: "rhnsd"
     enabled: yes
     state: restarted
-  when: spacewalk_status.rc != 0
+  when:
+    - spacewalk_status.rc != 0
 
 - name: "Enable & Start RHNS Timer Service (CentOS)"
   ansible.builtin.service:
@@ -102,7 +105,8 @@
         state: present
         validate_certs: no
       notify: clean-metadata
-  when: spacewalk_status.rc != 0
+  when:
+    - spacewalk_status.rc != 0
 
 - name: "Import CentOS Repository Signing Key (CentOS)"
   block:
@@ -125,4 +129,5 @@
         state: present
         validate_certs: no
       notify: clean-metadata
-  when: spacewalk_status.rc != 0
+  when:
+    - spacewalk_status.rc != 0
